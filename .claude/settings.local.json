@@ -12,7 +12,8 @@
       "Bash(git -c user.name=wakaba7659 -c user.email=wakabayashi@7659sw.com commit -m '3Dライブラリの読み込みを堅牢化 *)",
       "Bash(git push *)",
       "Bash(node livecheck.js)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Bash(node webkittest.js)"
     ]
   }
 }
