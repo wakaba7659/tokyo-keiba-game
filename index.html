@@ -537,35 +537,35 @@ table.board-t td.b-num{text-align:left;}
 }
 
 /* ===== モーダル ===== */
-.modal-ov{
+.kwin-ov{
   position:fixed;inset:0;z-index:100;
   background:rgba(4,12,8,.78);
   display:none;align-items:center;justify-content:center;padding:16px;
   backdrop-filter:blur(3px);
 }
-.modal-ov.show{display:flex;}
-.modal{
+.kwin-ov.show{display:flex;}
+.kwin{
   width:min(560px, 100%);
   background:var(--cream);
   border-radius:14px;
   box-shadow:0 10px 50px rgba(0,0,0,.55);
   overflow:hidden;
-  animation:modalIn .3s cubic-bezier(.2,.9,.3,1.2);
+  animation:kwinIn .3s cubic-bezier(.2,.9,.3,1.2);
   max-height:92vh;display:flex;flex-direction:column;
 }
-@keyframes modalIn{from{opacity:0;transform:translateY(26px) scale(.97);}to{opacity:1;transform:none;}}
-.modal-head{
+@keyframes kwinIn{from{opacity:0;transform:translateY(26px) scale(.97);}to{opacity:1;transform:none;}}
+.kwin-head{
   background:linear-gradient(180deg,#0b3d24,#0a4f2c);
   color:#fff;padding:13px 18px;
   font-size:15px;font-weight:800;letter-spacing:.1em;
   border-bottom:2px solid var(--gold);
   display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
 }
-.modal-body{padding:18px;overflow-y:auto;}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 18px;flex-shrink:0;}
+.kwin-body{padding:18px;overflow-y:auto;}
+.kwin-actions{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 18px;flex-shrink:0;}
 
 /* 初期設定モーダル */
-#setup-modal .modal{width:min(460px,100%);}
+#setup-kwin .kwin{width:min(460px,100%);}
 .setup-logo{text-align:center;margin-bottom:14px;}
 .setup-logo .sl-mark{
   display:inline-flex;width:64px;height:64px;border-radius:50%;
@@ -594,7 +594,7 @@ table.board-t td.b-num{text-align:left;}
 .setup-err{color:var(--red);font-size:12px;text-align:center;min-height:18px;font-weight:700;}
 
 /* ターフビジョン(結果) */
-#result-modal .modal{
+#result-kwin .kwin{
   width:min(720px,100%);
   background:#05070a;
   border:3px solid #2a3542;
@@ -660,7 +660,7 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
 .tv-actions .primary-btn{flex:1;font-size:14px;padding:12px 10px;}
 
 /* ウイナーズサークル */
-#circle-modal .modal{
+#circle-kwin .kwin{
   width:min(520px,100%);
   background:
     linear-gradient(180deg,#fbf7ea, #f2ead2);
@@ -694,7 +694,7 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
 }
 
 /* 汎用confirm */
-#confirm-modal .modal{width:min(420px,100%);}
+#confirm-kwin .kwin{width:min(420px,100%);}
 #confirm-text{font-size:13.5px;line-height:1.8;color:#3a3d33;}
 
 /* ===== トースト ===== */
@@ -866,10 +866,10 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
 </main>
 
 <!-- 初期設定モーダル -->
-<div class="modal-ov show" id="setup-modal">
-  <div class="modal">
-    <div class="modal-head"><span>ゲーム設定</span></div>
-    <div class="modal-body">
+<div class="kwin-ov show" id="setup-kwin">
+  <div class="kwin">
+    <div class="kwin-head"><span>ゲーム設定</span></div>
+    <div class="kwin-body">
       <div class="setup-logo">
         <div class="sl-mark">馬</div>
         <div class="sl-t">東京競馬場</div>
@@ -892,15 +892,15 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
       </div>
       <div class="setup-err" id="setup-err"></div>
     </div>
-    <div class="modal-actions">
+    <div class="kwin-actions">
       <button class="primary-btn" id="btn-setup-start" style="width:100%;">入場する</button>
     </div>
   </div>
 </div>
 
 <!-- 結果（ターフビジョン）モーダル -->
-<div class="modal-ov" id="result-modal">
-  <div class="modal">
+<div class="kwin-ov" id="result-kwin">
+  <div class="kwin">
     <div class="tv-frame" id="tv-frame"></div>
     <div class="tv-actions">
       <button class="sub-btn" id="btn-to-circle">ウイナーズサークルへ</button>
@@ -910,21 +910,21 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
 </div>
 
 <!-- ウイナーズサークルモーダル -->
-<div class="modal-ov" id="circle-modal">
-  <div class="modal">
+<div class="kwin-ov" id="circle-kwin">
+  <div class="kwin">
     <div class="wc-body" id="wc-body"></div>
-    <div class="modal-actions">
+    <div class="kwin-actions">
       <button class="primary-btn" id="btn-circle-next" style="width:100%;">次のレースへ →</button>
     </div>
   </div>
 </div>
 
 <!-- 汎用確認モーダル -->
-<div class="modal-ov" id="confirm-modal">
-  <div class="modal">
-    <div class="modal-head"><span id="confirm-title">確認</span></div>
-    <div class="modal-body"><div id="confirm-text"></div></div>
-    <div class="modal-actions">
+<div class="kwin-ov" id="confirm-kwin">
+  <div class="kwin">
+    <div class="kwin-head"><span id="confirm-title">確認</span></div>
+    <div class="kwin-body"><div id="confirm-text"></div></div>
+    <div class="kwin-actions">
       <button class="sub-btn" id="btn-confirm-no" style="color:#333;border-color:#999;background:#eee;">キャンセル</button>
       <button class="primary-btn" id="btn-confirm-yes" style="padding:10px 26px;font-size:13px;">OK</button>
     </div>
@@ -3322,7 +3322,7 @@ const App = {
     }));
 
     // セットアップモーダル
-    $$("#setup-modal .setup-quick button").forEach(b=>
+    $$("#setup-kwin .setup-quick button").forEach(b=>
       b.addEventListener("click",()=>{ $("#setup-money").value = b.dataset.m; }));
     $("#btn-setup-start").addEventListener("click",()=>this.applySetup());
 
@@ -3346,23 +3346,40 @@ const App = {
 
     // 結果モーダル
     $("#btn-to-circle").addEventListener("click",()=>{
-      $("#result-modal").classList.remove("show");
+      $("#result-kwin").classList.remove("show");
       this.showWinnersCircle();
     });
     $("#btn-result-next").addEventListener("click",()=>{
-      $("#result-modal").classList.remove("show");
+      $("#result-kwin").classList.remove("show");
       this.nextRace();
     });
     $("#btn-circle-next").addEventListener("click",()=>{
-      $("#circle-modal").classList.remove("show");
+      $("#circle-kwin").classList.remove("show");
       this.nextRace();
     });
     // 背景クリックで閉じる（結果確認モード）
-    [["#result-modal"],["#circle-modal"]].forEach(([sel])=>{
+    [["#result-kwin"],["#circle-kwin"]].forEach(([sel])=>{
       $(sel).addEventListener("click",(e)=>{
         if(e.target===$(sel)) $(sel).classList.remove("show");
       });
     });
+
+    // 広告ブロッカー等の拡張機能にダイアログを隠された場合の自己修復
+    setInterval(()=>{
+      $$(".kwin-ov.show").forEach(ov=>{
+        const md = ov.querySelector(".kwin");
+        if(getComputedStyle(ov).display==="none"){
+          ov.style.setProperty("display","flex","important");
+        }
+        if(md && (md.offsetHeight===0 || getComputedStyle(md).display==="none" ||
+                  getComputedStyle(md).visibility==="hidden" || getComputedStyle(md).opacity==="0")){
+          md.style.setProperty("display","flex","important");
+          md.style.setProperty("opacity","1","important");
+          md.style.setProperty("visibility","visible","important");
+          md.style.setProperty("animation","none","important");
+        }
+      });
+    }, 1200);
 
     // ループ開始
     this.lastTs = performance.now();
@@ -3384,7 +3401,7 @@ const App = {
     this.rendererReady.then(()=>{
       btn.disabled = false;
       btn.textContent = orig;
-      $("#setup-modal").classList.remove("show");
+      $("#setup-kwin").classList.remove("show");
       const firstTime = this.state==="setup";
       this.initialMoney = v;
       if(!firstTime){
@@ -3450,8 +3467,8 @@ const App = {
 
   nextRace(){
     if(this.state==="racing"||this.state==="prerace") return;
-    $("#result-modal").classList.remove("show");
-    $("#circle-modal").classList.remove("show");
+    $("#result-kwin").classList.remove("show");
+    $("#circle-kwin").classList.remove("show");
     this.round++;
     this.newRace();
   },
@@ -3474,7 +3491,7 @@ const App = {
     if(this.state==="racing"||this.state==="prerace") return this.toast("レース中は操作できません","err");
     $("#setup-money").value = this.initialMoney;
     $("#setup-err").textContent = "";
-    $("#setup-modal").classList.add("show");
+    $("#setup-kwin").classList.add("show");
   },
 
   /* ---------- レース進行 ---------- */
@@ -3654,7 +3671,7 @@ const App = {
       <table class="tv-pay">${payRows}</table>
       <div class="tv-sec-label">あなたの馬券</div>
       <div class="tv-my">${myRows}</div>`;
-    $("#result-modal").classList.add("show");
+    $("#result-kwin").classList.add("show");
 
     if(s.totalBack>0) this.toast(`払戻 ${yen(s.totalBack)} を受け取りました！`,"ok");
     if(this.money<100) this.addTimer(()=>this.toast("所持金がなくなりました…「所持金リセット」で再挑戦できます","err"), 1200);
@@ -3673,7 +3690,7 @@ const App = {
         ${esc(h.jockey)}騎手${esc(choice(JK_COMMENTS))}
       </div>
       <div class="wc-photo">— 口取り記念撮影 ／ 検量室前 —</div>`;
-    $("#circle-modal").classList.add("show");
+    $("#circle-kwin").classList.add("show");
   },
 
   /* ---------- メインループ ---------- */
@@ -3920,10 +3937,10 @@ const App = {
   confirm(title, text, onYes){
     $("#confirm-title").textContent = title;
     $("#confirm-text").textContent = text;
-    $("#confirm-modal").classList.add("show");
+    $("#confirm-kwin").classList.add("show");
     const yes = $("#btn-confirm-yes"), no = $("#btn-confirm-no");
     const close = ()=>{
-      $("#confirm-modal").classList.remove("show");
+      $("#confirm-kwin").classList.remove("show");
       yes.onclick = no.onclick = null;
     };
     yes.onclick = ()=>{ close(); onYes(); };
