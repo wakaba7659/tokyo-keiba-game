@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node e2e.js)",
+      "Bash(node _test_logic.js)",
+      "Bash(node visual.js)",
+      "WebSearch",
+      "Bash(node parade_shot.js)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(git add *)",
+      "Bash(git -c user.name=wakaba7659 -c user.email=wakabayashi@7659sw.com commit -m '3Dライブラリの読み込みを堅牢化 *)",
+      "Bash(git push *)"
+    ]
+  }
+}

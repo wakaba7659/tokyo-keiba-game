@@ -933,7 +933,34 @@ table.tv-pay td.p-pop{color:#8fa89a;font-size:11px;text-align:right;width:64px;}
 
 <div id="toasts"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"></script>
+<script>
+// Three.js を「同梱ファイル → CDN(2系統)」の順で非同期読み込み。
+// CDNがブロックされる環境でもページ全体は止まらない。
+window.__threeReady = new Promise(function(resolve){
+  var sources = [
+    "./three.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js",
+    "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"
+  ];
+  var settled = false;
+  function done(ok){ if(!settled){ settled = true; resolve(ok); } }
+  function tryLoad(i){
+    if(i>=sources.length) return done(false);
+    var s = document.createElement("script");
+    s.src = sources[i];
+    s.onload = function(){ done(true); };
+    s.onerror = function(){ s.remove(); tryLoad(i+1); };
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+  setTimeout(function(){ done(typeof THREE!=="undefined"); }, 12000); // 読込ハング時の保険
+});
+// 予期しないエラーは画面に表示（無反応のまま固まらないように）
+window.addEventListener("error", function(e){
+  var el = document.getElementById("status-msg");
+  if(el) el.textContent = "⚠ エラーが発生しました: " + (e.message || "読み込みに失敗しました");
+});
+</script>
 <script>
 "use strict";
 /* =========================================================
@@ -3269,15 +3296,19 @@ const App = {
 
   /* ---------- 初期化 ---------- */
   init(){
-    const wrap = $("#stage-canvas-wrap");
-    if(typeof THREE !== "undefined"){
-      try{ this.renderer = new Renderer3D(wrap); }
-      catch(e){ console.warn("3D初期化失敗:", e); }
-    }
-    if(!this.renderer){
-      this.renderer = new Renderer2D(wrap);
-      $("#renderer-note").style.display = "block";
-    }
+    // 3Dライブラリの読込を待たずにUIを配線し、レンダラーは非同期で用意する
+    this.rendererReady = (window.__threeReady || Promise.resolve(false)).then(()=>{
+      if(this.renderer) return;
+      const wrap = $("#stage-canvas-wrap");
+      if(typeof THREE !== "undefined"){
+        try{ this.renderer = new Renderer3D(wrap); }
+        catch(e){ console.warn("3D初期化失敗:", e); }
+      }
+      if(!this.renderer){
+        this.renderer = new Renderer2D(wrap);
+        $("#renderer-note").style.display = "block";
+      }
+    });
 
     Marksheet.init();
     Bets.render();
@@ -3345,21 +3376,30 @@ const App = {
       return;
     }
     $("#setup-err").textContent = "";
-    $("#setup-modal").classList.remove("show");
-    const firstTime = this.state==="setup";
-    this.initialMoney = v;
-    if(!firstTime){
-      Bets.clearAll(true);
-    }
-    this.money = v;
-    this.renderMoney();
-    if(firstTime){
-      this.newRace();
-      this.toast(`軍資金 ${yen(v)} でスタート！ まずは出走表とパドックをチェック`,"ok");
-    }else{
-      this.toast(`所持金を ${yen(v)} にリセットしました`,"ok");
-      Marksheet.refresh(); this.updateControls();
-    }
+    // レンダラー準備を待ってから入場（通常は一瞬。読込中はボタンに表示）
+    const btn = $("#btn-setup-start");
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = "読み込み中…";
+    this.rendererReady.then(()=>{
+      btn.disabled = false;
+      btn.textContent = orig;
+      $("#setup-modal").classList.remove("show");
+      const firstTime = this.state==="setup";
+      this.initialMoney = v;
+      if(!firstTime){
+        Bets.clearAll(true);
+      }
+      this.money = v;
+      this.renderMoney();
+      if(firstTime){
+        this.newRace();
+        this.toast(`軍資金 ${yen(v)} でスタート！ まずは出走表とパドックをチェック`,"ok");
+      }else{
+        this.toast(`所持金を ${yen(v)} にリセットしました`,"ok");
+        Marksheet.refresh(); this.updateControls();
+      }
+    });
   },
 
   /* ---------- レース生成 ---------- */
@@ -3702,7 +3742,7 @@ const App = {
       this.renderer.paradeIdx = this.paradeIdx;
     }
 
-    this.renderer.update(dt, this.lastSnap);
+    if(this.renderer) this.renderer.update(dt, this.lastSnap);
     this.drawMinimap();
     this.pumpTicker(ts);
     requestAnimationFrame((t)=>this.loop(t));
@@ -3773,7 +3813,7 @@ const App = {
     const g = cv.getContext("2d");
     const W = cv.width, H = cv.height;
     g.clearRect(0,0,W,H);
-    if(!this.course) return;
+    if(!this.course || !this.renderer) return;
     const tx = (x,y)=>{
       const sc = Math.min(W/740, H/430);
       return [W/2 + x*sc, H*0.55 - (y-153)*sc];
