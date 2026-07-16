@@ -275,6 +275,7 @@ td.tl{text-align:left;}
 }
 .style-0{background:#d64545;} .style-1{background:#e08a2e;}
 .style-2{background:#2e78c9;} .style-3{background:#7b4fc9;}
+.style-4{background:#a4133c;}
 .cond-stars{color:#e0342f;font-size:12px;letter-spacing:1px;}
 .cond-label{font-size:10px;color:#777;}
 .apt{font-weight:800;font-size:13px;}
@@ -962,6 +963,7 @@ window.addEventListener("error", function(e){
   if(el) el.textContent = "⚠ エラーが発生しました: " + (e.message || "読み込みに失敗しました");
 });
 </script>
+<script src="./jockeys.js"></script>
 <script>
 "use strict";
 /* =========================================================
@@ -995,7 +997,7 @@ function fmtTime(sec){
  * =======================================================*/
 const WAKU_COLORS = ["#ffffff","#26262b","#e0342f","#1f5fc4","#f2c500","#2e9e4f","#e88024","#ef7f9a"];
 const WAKU_TEXT   = ["#222","#fff","#fff","#fff","#222","#fff","#fff","#fff"];
-const STYLE_NAMES = ["逃げ","先行","差し","追込"];
+const STYLE_NAMES = ["逃げ","先行","差し","追込","大逃げ"];
 const COND_LABELS = ["絶不調","不調","普通","好調","絶好調"]; // index = cond+2
 const APT_MARKS   = ["","✕","△","○","◎"];                    // index 1..4
 const GOING_NAMES = ["良","稍重","重","不良"];
@@ -1009,14 +1011,22 @@ const NAME_A = ["ハヤテ","アカツキ","ムーン","サニー","シルバー
 const NAME_B = ["フレイム","ウィンド","ストーム","ドリーム","スピリット","ブレイズ","アロー","ダンサー","ロード","クイン",
   "キング","ボルト","ステップ","ラッシュ","ホープ","グロー","フェザー","コメット","ミラージュ","ブロッサム",
   "エース","リズム","テンポ","オー","スター","ハート","ジェット","マーチ","ソング","フラッグ"];
-const JOCKEYS = ["東雲隼人","早瀬光","桐生一真","神谷蓮","荒木大和","白鳥司","南田奏太","柊木亮","真壁徹","火野正宗",
-  "御影優","九条湊","榊原駿","時任怜","綾瀬一颯","羽賀健吾","燕結人","嵐山大地","氷室快","春日遼太郎"];
+// JOCKEYS は ./jockeys.js で定義（騎手名だけ編集したい場合はそちらを直接編集）
 const RACE_NAMES = [
   ["府中ステークス","オープン"],["欅ステークス","オープン"],["青嵐賞","２勝クラス"],["武蔵野特別","２勝クラス"],
   ["多摩川特別","１勝クラス"],["是政特別","１勝クラス"],["みなも賞","１勝クラス"],["けやき通り特別","２勝クラス"],
   ["飛翔特別","２勝クラス"],["初雁特別","１勝クラス"],["富士見坂ステークス","オープン"],["東京スポーツ杯","オープン"],
   ["紅葉ステークス","オープン"],["白富士カップ","オープン"],["いちょう特別","１勝クラス"],["スターライト賞","２勝クラス"],
-  ["ダイヤモンドトロフィー","オープン"],["ウインズカップ","２勝クラス"],["夕月特別","１勝クラス"],["競馬場通り特別","１勝クラス"]
+  ["ダイヤモンドトロフィー","オープン"],["ウインズカップ","２勝クラス"],["夕月特別","１勝クラス"],["競馬場通り特別","１勝クラス"],
+  ["若草賞","未勝利"],["すずかけ賞","未勝利"],["浅間山賞","未勝利"],["多摩湖特別","未勝利"],["新緑賞","未勝利"],["早苗賞","未勝利"]
+];
+// 新馬戦（メイクデビュー）: rNo4〜6の一部に割り当てる専用プール
+const MAIDEN_RACE_NAMES = [
+  ["サラブレッド系２歳新馬","新馬"],["２歳新馬","新馬"],["サラブレッド系３歳新馬","新馬"]
+];
+// 3勝クラス: rNo10または12に割り当てる専用プール
+const SANKATSU_RACE_NAMES = [
+  ["若駒特別","３勝クラス"],["さつき特別","３勝クラス"],["奥多摩特別","３勝クラス"],["高尾特別","３勝クラス"]
 ];
 // 東京競馬場で実際に行われるGI（開催日ごとに巡回）
 const G1_RACES = [
@@ -1140,6 +1150,21 @@ function makeCourse(surface){
  * =======================================================*/
 const RaceGen = {
   usedNames: new Set(),
+  scheduleDay: -1,
+  daySchedule: null,
+
+  // 開催日ごとのクラス編成（新馬戦の発生数・rNo、3勝クラスのrNo）を決める。
+  // rNoは1日の中で1→12の順に生成されるため、その日最初の呼び出し時に一度だけ確定させれば
+  // 同じ日の後続レースにも一貫して反映される。
+  ensureDaySchedule(day){
+    if(this.scheduleDay===day) return this.daySchedule;
+    const nMaiden = choice([0,1,1,2,2]);           // 発生しない日もある（0〜2走）
+    const maidenSlots = new Set(shuffle([4,5,6]).slice(0,nMaiden));
+    const sankatsuSlot = choice([10,12]);           // 3勝クラスは10Rか12Rのどちらか
+    this.scheduleDay = day;
+    this.daySchedule = {maidenSlots, sankatsuSlot};
+    return this.daySchedule;
+  },
 
   wakuAssign(n){
     // JRA方式: 8枠に配分（多頭数は大きい枠番から複数頭）
@@ -1181,7 +1206,9 @@ const RaceGen = {
     if(surface==="turf" && h.aptT>=4) pool.push("軽い芝は歓迎のクチ","府中の長い直線は合いそう");
     if(apt<=1) pool.push("この馬場は割引が必要か","適性面に課題を残す");
     if(h.style===0) pool.push("テンから飛ばしてハナを主張しそう","ゲート裏でも行く気十分");
+    if(h.style===4) pool.push("大逃げでハナを叩き切る競馬になるか","一か八かの独走策に出るかも");
     if(h.style===3) pool.push("後方一気の末脚に懸ける構え","じっくり脚を溜める競馬か");
+    if(h.makuri) pool.push("3コーナーで一気に動いてくるかもしれない","早めに勝負に出る競馬も選択肢か");
     if(h.cond>=1 && apt>=3) pool.push("死角の少ない一頭");
     if(pool.length && Math.random()<0.85) parts.push(choice(pool));
     return parts.join("。") + "。";
@@ -1202,17 +1229,35 @@ const RaceGen = {
     }
     const count = isG1 ? randInt(15,18) : randInt(9,18);
     const goingIdx = choice([0,0,0,0,1,1,2,3]);
-    const [rname, rclass] = g1def ? [g1def.name, "GI"] : choice(RACE_NAMES);
+
+    // 11R以外のクラス編成: 新馬戦(4〜6Rの一部)・3勝クラス(10Rか12R)を優先的に割り当て、
+    // 残りは未勝利・1勝クラス・2勝クラス・オープンからランダムに選ぶ
+    const sched = isG1 ? null : this.ensureDaySchedule(day);
+    let rname, rclass;
+    if(g1def){
+      rname = g1def.name; rclass = "GI";
+    }else if(sched.maidenSlots.has(rNo)){
+      [rname, rclass] = choice(MAIDEN_RACE_NAMES);
+    }else if(rNo===sched.sankatsuSlot){
+      [rname, rclass] = choice(SANKATSU_RACE_NAMES);
+    }else{
+      [rname, rclass] = choice(RACE_NAMES);
+    }
+
     const waku = this.wakuAssign(count);
     const jockeys = shuffle(JOCKEYS).slice(0,count);
     const styles = shuffle(
       Array.from({length:count},(_,i)=>[0,1,1,2,2,3][i%6])
-    );
+    ).map(s=>(s===0 && Math.random()<0.3) ? 4 : s); // 逃げの一部が大逃げ（ハイリスク・ハイリターン）に
 
     const horses = [];
     for(let i=0;i<count;i++){
-      // GIは実力上位馬が揃う（能力・調子・当該馬場適性のばらつきが小さい）
-      const ability = isG1 ? rand(76,90) : rand(58,90);
+      // クラスによって能力値のレンジを調整（新馬・未勝利は低め＆ばらつき大、3勝クラスは高め）
+      let ability;
+      if(isG1) ability = rand(76,90);
+      else if(rclass==="新馬" || rclass==="未勝利") ability = rand(42,78);
+      else if(rclass==="３勝クラス") ability = rand(70,92);
+      else ability = rand(58,90);
       const cond = isG1 ? choice([-1,0,0,0,1,1,1,2,2]) : choice([-2,-1,-1,0,0,0,0,1,1,1,2,2]);
       let aptT = choice([1,2,2,3,3,3,4,4]);
       let aptD = choice([1,2,2,3,3,3,4,4]);
@@ -1243,7 +1288,9 @@ const RaceGen = {
         aptT, aptD,
         coat: choice(COAT_COLORS),
         silks: this.silks(),
-        lateBreak: Math.random()<0.06
+        lateBreak: Math.random()<0.06,
+        // まくり: 差し・追込の一部が3コーナーで発生させる特殊な仕掛け（演出用の一過性フラグ）
+        makuri: (styles[i]===2||styles[i]===3) && Math.random()<0.22
       });
     }
 
@@ -2007,7 +2054,7 @@ class RaceSim {
     const surf = race.surface;
     const going = race.going;
     const goingV = [0, -0.14, -0.3, -0.5][going];
-    const nNige = race.horses.filter(h=>h.style===0).length;
+    const nNige = race.horses.filter(h=>h.style===0||h.style===4).length;
 
     this.horses = race.horses.map((h,i)=>{
       const apt = surf==="turf" ? h.aptT : h.aptD;
@@ -2022,29 +2069,31 @@ class RaceSim {
         + rand(-0.05,0.05);
 
       // スパート力: 芝は差し・追込に上積み / ダートは先行有利
-      let spurtAdd = [-0.045, -0.012, 0.012, 0.028][h.style];
-      if(surf==="turf" && h.style>=2) spurtAdd += 0.032;
-      if(surf==="turf" && h.style===0) spurtAdd -= 0.008;
-      if(surf==="dirt"){ spurtAdd += (h.style<=1 ? 0.012 : -0.004); }
+      let spurtAdd = [-0.045, -0.012, 0.012, 0.028, -0.06][h.style];
+      if(surf==="turf" && (h.style===2||h.style===3)) spurtAdd += 0.032;
+      if(surf==="turf" && (h.style===0||h.style===4)) spurtAdd -= 0.008;
+      if(surf==="dirt"){ spurtAdd += ((h.style<=1||h.style===4) ? 0.012 : -0.004); }
       const spurtPow = 1.078 + (h.guts-70)*0.0016 + h.cond*0.005 + spurtAdd + rand(-0.008,0.008);
 
       // スパート開始（残り距離）
-      const spurtAt = [640, 610, 560, 480][h.style] + rand(-50,50);
+      const spurtAt = [640, 610, 560, 480, 650][h.style] + rand(-50,50);
 
       // バテたときの失速下限: ダート/重馬場は前が止まりにくい
       let fadeFloor = surf==="dirt" ? 0.952 : 0.918;
       if(h.style<=1 && surf==="dirt") fadeFloor += 0.012;
       if(going>=2 && h.style<=1) fadeFloor += 0.008;
+      // 大逃げ: 坂でスタミナが切れると通常の逃げより大きく失速するリスク
+      if(h.style===4) fadeFloor -= 0.025;
 
       // ハイペース補正（逃げ馬が複数いると共倒れリスク）
-      const overPace = (h.style===0 && nNige>=2);
+      const overPace = ((h.style===0||h.style===4) && nNige>=2);
 
       return {
         h, i,
         covered: 0, v: 0, lane: 0,
         gateLane: 0, targetLane: 0, avoid: 0,
         // コース取りの個性: 内へ寄せたがる馬・外を回す馬・寄せるタイミング・ふらつき
-        laneBias: h.style<=1 ? rand(0, 1.4) : rand(0.3, 3.0),
+        laneBias: (h.style<=1||h.style===4) ? rand(0, 1.4) : rand(0.3, 3.0),
         convDist: rand(130, 340),
         laneRate: rand(0.9, 1.7),
         wanderF: rand(0.12, 0.4), wanderP: rand(0, Math.PI*2), wanderA: rand(0.25, 0.9),
@@ -2055,6 +2104,7 @@ class RaceSim {
         fade: 1, spurting: false, blocked: false,
         finished: false, time: 0,
         lateBroke: h.lateBreak,
+        makuriFlag: h.makuri, makuriDone: false, makuriBoost: 0,
         anim: rand(0,6)
       };
     });
@@ -2069,6 +2119,13 @@ class RaceSim {
     });
     this.startS = course.startS(race.dist);
     this.raceSecs = race.dist/16.5;
+
+    // まくり判定用: 3コーナー入口〜3-4コーナー中間の「残り距離」の範囲（最終回だけに一致する）
+    const remAtS = (s)=> ((course.FINISH - s) % course.L + course.L) % course.L;
+    const corner3In = 2*course.HOME + course.arc;
+    const corner3Mid = corner3In + course.arc*0.5;
+    this.makuriRemHi = remAtS(corner3In) + 80;
+    this.makuriRemLo = remAtS(corner3Mid);
   }
 
   emit(type, text, data){ this.events.push({type, text, data}); }
@@ -2106,16 +2163,24 @@ class RaceSim {
       const trackS = (this.startS + hr.covered) % course.L;
       const grade = course.gradeAt(trackS);
 
+      // ---- まくり: 3コーナー手前〜中間で、差し・追込の一部が早仕掛けで外から一気に進出 ----
+      if(hr.makuriFlag && !hr.makuriDone && hr.covered>=240 && rem<=this.makuriRemHi && rem>=this.makuriRemLo){
+        hr.makuriDone = true;
+        hr.makuriBoost = 1;
+        this.emit("makuri", `${h.name}が3コーナーでまくってきた！`, {num:h.num});
+        this.leadChangeCd = Math.max(this.leadChangeCd, 3);
+      }
+
       // ---- 目標速度 ----
       let target;
       if(hr.covered < 240){
         // ダッシュ: 脚質でポジション形成
-        const gate = [1.10, 1.055, 0.99, 0.945][h.style];
+        const gate = [1.10, 1.055, 0.99, 0.945, 1.16][h.style];
         target = hr.vBase * lerp(gate, this.cruiseMul(hr), hr.covered/240);
         if(hr.lateBroke && this.time<2.4) target *= 0.72;
       }else if(!hr.spurting && rem <= hr.spurtAt){
         hr.spurting = true;
-        if(h.style>=2 && ranks[hr.i]<=Math.ceil(this.horses.length/2) && rem>350 && this.leadChangeCd<=0){
+        if((h.style===2||h.style===3) && ranks[hr.i]<=Math.ceil(this.horses.length/2) && rem>350 && this.leadChangeCd<=0){
           this.emit("ticker", `${h.name}が外から進出してきた！`);
           this.leadChangeCd = 4;
         }
@@ -2124,6 +2189,12 @@ class RaceSim {
         target = hr.vBase * hr.spurtPow;
       }else{
         target = hr.vBase * this.cruiseMul(hr);
+      }
+
+      // まくりの上積み（数秒かけて自然に減衰）
+      if(hr.makuriBoost>0){
+        target *= 1 + hr.makuriBoost*0.16;
+        hr.makuriBoost = Math.max(0, hr.makuriBoost - dt*0.13);
       }
 
       // 坂: 上りは即座に速度を削る（だんだら坂の失速表現）
@@ -2157,7 +2228,8 @@ class RaceSim {
       drain += Math.min(0,grade)*22;               // 下りで僅かに回復
       if(hr.overPace) drain *= 1.16;
       if(surf==="dirt" && h.style<=1) drain *= 0.88;   // ダートは前が止まりにくい
-      if(surf==="turf" && h.style>=2) drain *= 0.80; // 芝の待機組は脚が溜まり、切れ味も持続する
+      if(surf==="turf" && (h.style===2||h.style===3)) drain *= 0.80; // 芝の待機組は脚が溜まり、切れ味も持続する
+      if(h.style===4) drain *= 1.32; // 大逃げは大きなリードを作り続ける分、消耗も大きい
       hr.sta -= drain*dt;
       if(hr.sta<=0){
         hr.fade = Math.max(hr.fadeFloor, hr.fade - dt*0.09);
@@ -2174,8 +2246,9 @@ class RaceSim {
       }else{
         laneTarget = wantLane;
         // 差し・追込は4コーナー手前から外に持ち出して進路を確保する
-        if(rem < course.FINISH + 220 && h.style>=2) laneTarget += 1.8;
+        if(rem < course.FINISH + 220 && (h.style===2||h.style===3)) laneTarget += 1.8;
       }
+      if(hr.makuriBoost>0) laneTarget += 2.4; // まくり: 外に持ち出して一気に追い抜く
       laneTarget += hr.avoid;
       laneTarget = clamp(laneTarget, 0, course.laneMax);
       hr.lane += clamp(laneTarget-hr.lane, -hr.laneRate*dt, hr.laneRate*dt);
@@ -2265,7 +2338,7 @@ class RaceSim {
   }
 
   cruiseMul(hr){
-    let m = [1.024, 1.006, 0.990, 0.978][hr.h.style] + hr.paceNoise;
+    let m = [1.024, 1.006, 0.990, 0.978, 1.048][hr.h.style] + hr.paceNoise;
     if(hr.overPace) m += 0.008;
     return m;
   }
@@ -3142,6 +3215,19 @@ class Renderer3D {
         tLook = c; tFov = 20;
         break;
       }
+      case "makuri": {
+        // まくり演出: 進出する馬を一瞬だけ追いかけてズームする
+        const mh = this.makuriIdx!=null && snap ? snap.horses[this.makuriIdx] : null;
+        if(!mh){ break; }
+        const p = course.point(mh.trackS, mh.lane);
+        const c = new THREE.Vector3(p.x, p.h+1.5, -p.y);
+        const fwd = new THREE.Vector3(Math.cos(p.ang), 0, -Math.sin(p.ang));
+        const out = new THREE.Vector3(Math.sin(p.ang), 0, Math.cos(p.ang));
+        tPos = c.clone().addScaledVector(out, 13).addScaledVector(fwd, -6).add(new THREE.Vector3(0, 3.2, 0));
+        tLook = c.clone().addScaledVector(fwd, 4);
+        tFov = 13;
+        break;
+      }
     }
 
     if(tPos){
@@ -3781,6 +3867,14 @@ const App = {
     for(const ev of this.sim.events){
       switch(ev.type){
         case "ticker": this.ticker(ev.text); break;
+        case "makuri":
+          this.ticker(ev.text);
+          this.renderer.makuriIdx = ev.data.num-1;
+          this.renderer.setMode("makuri");
+          this.addTimer(()=>{
+            if(this.renderer.camState && this.renderer.camState.mode==="makuri") this.renderer.setMode("overview");
+          }, 2200);
+          break;
         case "straight":
           this.ticker(ev.text);
           this.renderer.setMode("stretch");

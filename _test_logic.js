@@ -17,9 +17,11 @@ global.performance = { now: ()=>Date.now() };
 global.requestAnimationFrame = ()=>{};
 global.ResizeObserver = class { observe(){} };
 
+const jockeysJs = fs.readFileSync(__dirname + "/jockeys.js", "utf8");
+
 // 構文チェックを兼ねて評価（関数スコープ内でevalし、必要な参照を返す）
 const {RaceGen, RaceSim, Bets, makeCourse, genCombos, comboHit, comboOdds, ParadeSim} = (function(){
-  return eval(js + "\n;({RaceGen, RaceSim, Bets, makeCourse, genCombos, comboHit, comboOdds, ParadeSim});");
+  return eval(jockeysJs + "\n" + js + "\n;({RaceGen, RaceSim, Bets, makeCourse, genCombos, comboHit, comboOdds, ParadeSim});");
 })();
 
 let fails = 0;
@@ -85,7 +87,7 @@ check("組オッズ健全", payoutBad===0);
 
 // 脚質×馬場傾向: 芝は差し追込、ダートは逃げ先行が相対的に有利
 const rate = (o,s)=> (styleWins[o][s]+styleWins[o][s===0?1:s===3?2:s]) / 1; // raw
-const frontRate = (o)=> (styleWins[o][0]+styleWins[o][1]) / Math.max(1,(styleRuns[o][0]+styleRuns[o][1]));
+const frontRate = (o)=> (styleWins[o][0]+styleWins[o][1]+(styleWins[o][4]||0)) / Math.max(1,(styleRuns[o][0]+styleRuns[o][1]+(styleRuns[o][4]||0)));
 const closeRate = (o)=> (styleWins[o][2]+styleWins[o][3]) / Math.max(1,(styleRuns[o][2]+styleRuns[o][3]));
 console.log(`  芝: 前(逃/先)勝率/頭=${(frontRate("turf")*100).toFixed(2)}% 後(差/追)=${(closeRate("turf")*100).toFixed(2)}%`);
 console.log(`  ダ: 前(逃/先)勝率/頭=${(frontRate("dirt")*100).toFixed(2)}% 後(差/追)=${(closeRate("dirt")*100).toFixed(2)}%`);

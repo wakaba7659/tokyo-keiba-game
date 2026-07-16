@@ -24,8 +24,9 @@
 
 ## 技術
 
-1ファイルのHTML/CSS/JavaScript（`index.html`）。3D描画は [Three.js](https://threejs.org/)（CDN）。
+HTML/CSS/JavaScript（`index.html`）。3D描画は [Three.js](https://threejs.org/)（CDN）。
 オフライン環境では2D簡易表示に自動フォールバックします。
+騎手名リストは `jockeys.js` に外出し（編集はこのファイルのみでOK）。
 
 `_test_logic.js` はレースエンジン・オッズ計算の検証ハーネスです（`node _test_logic.js`）。
 

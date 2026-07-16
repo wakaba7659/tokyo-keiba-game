@@ -13,7 +13,11 @@
       "Bash(git push *)",
       "Bash(node livecheck.js)",
       "Bash(npx playwright *)",
-      "Bash(node webkittest.js)"
+      "Bash(node webkittest.js)",
+      "Bash(node *)",
+      "Bash(grep *)",
+      "Bash(jobs -l)",
+      "Bash(ps *)"
     ]
   }
 }
